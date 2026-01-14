@@ -1,104 +1,68 @@
 import express from "express";
-import fs from "fs";
+import cors from "cors";
+import { connectDB } from "./db/Product.js";
+import {
+  addProductController,
+  deleteProductController,
+  getAllProductsController,
+  getProductByIdController,
+  resetProductsController,
+  updateProductController,
+} from "./controllers/Product.js";
+
 const port = 3000;
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
-app.get("/products", (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync("./products.json", { encoding: "utf-8" })
-  );
-  console.log(products);
-  res.send(products);
-});
+// const connectDB = async () => {
+//   try {
+//     const mongoURI = "mongodb://127.0.0.1:27017/gocode-shop";
+//     await mongoose.connect(mongoURI);
+//     console.log("✅ MongoDB Connected: gocode-shop");
+//   } catch (err) {
+//     console.error("❌ MongoDB Connection Error:", err.message);
+//     process.exit(1);
+//   }
+// };
 
-app.get("/products/id/:id", (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync("./products.json", { encoding: "utf-8" })
-  );
-  const productById = products.find((product) => product.id === +req.params.id);
-  console.log(productById);
-  res.send(productById);
-});
+// const productSchema = new mongoose.Schema({
+//   title: { type: String, required: true, min: 5, max: 800 },
+//   price: { type: Number, required: true, min: 0 },
+//   description: String,
+//   category: String,
+//   image: String,
+//   rating: {
+//     rate: { type: Number, min: 0, max: 10 },
+//     count: Number,
+//   },
+// });
 
-app.post("/products", (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync("./products.json", { encoding: "utf-8" })
-  );
+// const Product = mongoose.model("Product", productSchema);
 
-  const maxId = products.length ? Math.max(...products.map((p) => p.id)) : 0;
-  products.push({
-    id: maxId + 1,
-    title: req.body.title,
-    price: req.body.price,
-    description: req.body.description,
-    category: req.body.category,
-    image: req.body.image,
-    rating: {
-      rate: req.body.rating?.rate || 0,
-      count: req.body.rating?.count || 0,
-    },
+// -------------------- ROUTES -------------------- //
+
+app.get("/products", getAllProductsController);
+
+app.get("/products/id/:id", getProductByIdController);
+
+app.post("/products", addProductController);
+
+app.delete("/products/id/:id", deleteProductController);
+
+app.put("/products/id/:id", updateProductController);
+
+app.post("/products/reset", resetProductsController);
+
+// -------------------- START SERVER -------------------- //
+
+const startServer = async () => {
+  await connectDB();
+  app.listen(port, () => {
+    console.log(`🚀 Server running at http://localhost:${port}`);
   });
-  fs.writeFileSync("./products.json", JSON.stringify(products), {
-    encoding: "utf-8",
-  });
+};
 
-  console.log(products);
-  res.send(products);
-});
+startServer();
 
-app.delete("/products/id/:id", (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync("./products.json", { encoding: "utf-8" })
-  );
-  const newProducts = products.filter(
-    (product) => product.id !== +req.params.id
-  );
-  fs.writeFileSync("./products.json", JSON.stringify(newProducts), {
-    encoding: "utf-8",
-  });
-
-  console.log(newProducts);
-  res.send(newProducts);
-});
-
-//TODO: ADD VALIDATIONS
-app.put("/products/id/:id", (req, res) => {
-  const products = JSON.parse(
-    fs.readFileSync("./products.json", { encoding: "utf-8" })
-  );
-  const productById = products.find((product) => product.id === +req.params.id);
-
-  if (!productById) {
-    return res.status(404).json({ error: "Product not found" });
-  }
-
-  const updates = { ...req.body };
-
-  const invalidFields = Object.keys(updates).filter(
-    (key) => !(key in productById)
-  );
-
-  if (invalidFields.length > 0) {
-    return res.status(400).json({
-      error: "Invalid fields in update: ",
-      invalidFields,
-    });
-  }
-
-  const updatedProducts = products.map((product) =>
-    product.id === +req.params.id ? { ...product, ...updates } : product
-  );
-
-  fs.writeFileSync("products.json", JSON.stringify(updatedProducts), {
-    encoding: "utf-8",
-  });
-
-  console.log({ ...productById, ...req.body });
-  res.send({ ...productById, ...req.body });
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
