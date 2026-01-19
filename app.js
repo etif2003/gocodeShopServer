@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { connectDB } from "./db/Product.js";
+import { connectDB } from "./db/connect_db.js";
 import {
   addProductController,
   deleteProductController,
@@ -9,6 +9,18 @@ import {
   resetProductsController,
   updateProductController,
 } from "./controllers/Product.js";
+import {
+  addAllUsersController,
+  addUserController,
+  changeUserPasswordController,
+  deleteAllUsersController,
+  deleteUserController,
+  getAllUsersController,
+  getUserByIdController,
+  loginUsersController,
+  resetUsersController,
+  updateUserController,
+} from "./controllers/User.js";
 
 const port = 3000;
 const app = express();
@@ -16,32 +28,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// const connectDB = async () => {
-//   try {
-//     const mongoURI = "mongodb://127.0.0.1:27017/gocode-shop";
-//     await mongoose.connect(mongoURI);
-//     console.log("✅ MongoDB Connected: gocode-shop");
-//   } catch (err) {
-//     console.error("❌ MongoDB Connection Error:", err.message);
-//     process.exit(1);
-//   }
-// };
-
-// const productSchema = new mongoose.Schema({
-//   title: { type: String, required: true, min: 5, max: 800 },
-//   price: { type: Number, required: true, min: 0 },
-//   description: String,
-//   category: String,
-//   image: String,
-//   rating: {
-//     rate: { type: Number, min: 0, max: 10 },
-//     count: Number,
-//   },
-// });
-
-// const Product = mongoose.model("Product", productSchema);
-
 // -------------------- ROUTES -------------------- //
+
+// Product:
 
 app.get("/products", getAllProductsController);
 
@@ -55,6 +44,28 @@ app.put("/products/id/:id", updateProductController);
 
 app.post("/products/reset", resetProductsController);
 
+// User:
+
+app.get("/users", getAllUsersController);
+
+app.get("/users/:idNumber", getUserByIdController);
+
+app.post("/users", addUserController);
+
+app.post("/users/allUsers", addAllUsersController);
+
+app.delete("/users/:idNumber", deleteUserController);
+
+app.delete("/users/allUsers", deleteAllUsersController);
+
+app.put("/users/:idNumber", updateUserController);
+
+app.put("/users/reset", resetUsersController);
+
+app.post("/users/login", loginUsersController);
+
+app.put("/users/:idNumber/password", changeUserPasswordController);
+
 // -------------------- START SERVER -------------------- //
 
 const startServer = async () => {
@@ -65,4 +76,3 @@ const startServer = async () => {
 };
 
 startServer();
-
