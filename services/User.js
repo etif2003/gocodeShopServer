@@ -1,61 +1,121 @@
 import { User } from "../models/User.js";
+import bcrypt from "bcryptjs";
 import fs from "fs";
 
-export const getAllUsersService = () => {
-  return User.find({});
+const hashFunc = (password) => {
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(password, salt);
+  return hashedPassword;
 };
 
-export const getUserByIdService = (id) => {
-  return User.findOne({ idNumber: id });
+// ---------- GET ----------
+
+export const getAllUsersService = async () => {
+  return await User.find({});
 };
 
-export const createUserService = (body) => {
-  return new User(body);
+export const getUserByIdService = async (id) => {
+  return await User.findOne({ _id: id });
 };
 
-export const saveUserService = (newUser) => {
-  return newUser.save();
+// ---------- CREATE ----------
+
+export const registerUserService = async (newUser) => {
+  const hashedPassword = hashFunc(newUser.password);
+  const userAfterHashing = { ...newUser, password: hashedPassword };
+  const user = new User(userAfterHashing);
+  return await user.save();
 };
 
-export const deleteUserByIdService = (idNumber) => {
-  return User.findOneAndDelete({ idNumber });
+// ---------- DELETE ----------
+
+export const deleteUserByIdService = async (id) => {
+  return await User.findOneAndDelete({ _id: id });
 };
 
-export const updateUserByIdService = (idNumber, updates) => {
-  return User.findOneAndUpdate({ idNumber }, updates, { new: true });
+export const deleteAllUsersService = async () => {
+  return await User.deleteMany({});
 };
 
-export const readUsersFromFileService = () => {
-  return JSON.parse(fs.readFileSync("./users.json", { encoding: "utf-8" }));
+// ---------- UPDATE ----------
+
+export const updateUserByIdService = async (id, updates) => {
+  const user = await User.findOne({ _id: id });
+
+  if (!user) {
+    throw new Error("no user found");
+  }
+
+  const schemaPaths = Object.keys(User.schema.paths);
+
+  const invalidFields = Object.keys(updates).filter(
+    (key) => !schemaPaths.includes(key)
+  );
+
+  if (invalidFields.length > 0) {
+    throw new Error(`Invalid fields to update: ${invalidFields}`);
+  }
+
+  if ("password" in updates) {
+    throw new Error("Password cannot be updated through this route");
+  }
+
+  const updatedUser = await User.findOneAndUpdate({ _id: id }, updates, {
+    new: true,
+  });
+  return updatedUser;
 };
 
-export const deleteAllUsersService = () => User.deleteMany({});
+// ---------- FILE ----------
 
-export const insertAllUsersService = (users) => User.insertMany(users);
+export const readUsersFromFileService = async () => {
+  const users = JSON.parse(
+    fs.readFileSync("./users.json", { encoding: "utf-8" })
+  );
+  return users;
+};
 
-export const loginUserService = async (idNumber, password) => {
-  const user = await User.findOne({ idNumber });
+export const insertAllUsersService = async (users) => {
+  const insertedUsers = await User.insertMany(users);
+  return insertedUsers;
+};
 
-  if (!user) return null;
+// ---------- AUTH ----------
 
-  if (user.password !== password) return null;
+export const loginUserService = async (email, password) => {
+  const user = await User.findOne({ email });
 
-  return user;
+  if (!user) {
+    throw new Error("no user found");
+  }
+
+  const isMatching = bcrypt.compareSync(password, user.password);
+  return isMatching;
 };
 
 export const changeUserPasswordService = async (
-  idNumber,
+  id,
   oldPassword,
   newPassword
 ) => {
-  const user = await User.findOne({ idNumber });
+  const user = await User.findOne({ _id: id });
 
-  if (!user) return null;
+  if (!user) {
+    throw new Error("no user found");
+  }
 
-  if (user.password !== oldPassword) return null;
+  const isPasswordsMatching = bcrypt.compareSync(oldPassword, user.password);
+  if (!isPasswordsMatching) {
+    throw new Error("password do not match - good bye mr. hacker");
+  }
 
-  user.password = newPassword;
-  await user.save();
+  /* check that the new password is standing by the corrected regexes and patterns needed*/
 
-  return user;
+  const hashedPassword = hashFunc(newPassword);
+
+  return await User.findOneAndUpdate(
+    { _id: id },
+    { password: hashedPassword },
+    { new: true }
+  );
 };

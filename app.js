@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./db/connect_db.js";
+import "dotenv/config";
+
 import {
   addProductController,
   deleteProductController,
@@ -11,18 +13,19 @@ import {
 } from "./controllers/Product.js";
 import {
   addAllUsersController,
-  addUserController,
   changeUserPasswordController,
   deleteAllUsersController,
-  deleteUserController,
+  deleteUserByIdController,
   getAllUsersController,
   getUserByIdController,
   loginUsersController,
+  registerUserController,
   resetUsersController,
-  updateUserController,
+  updateUserByIdController,
 } from "./controllers/User.js";
 
-const port = 3000;
+const port = process.env.PORT || 4000;
+const mongoURI = process.env.MONGO_URI || "";
 const app = express();
 
 app.use(express.json());
@@ -48,28 +51,31 @@ app.post("/products/reset", resetProductsController);
 
 app.get("/users", getAllUsersController);
 
-app.get("/users/:idNumber", getUserByIdController);
+app.get("/users/:userId", getUserByIdController);
 
-app.post("/users", addUserController);
+app.post("/users", registerUserController);
 
-app.post("/users/allUsers", addAllUsersController);
-
-app.delete("/users/:idNumber", deleteUserController);
+app.delete("/users/:userId", deleteUserByIdController);
 
 app.delete("/users/allUsers", deleteAllUsersController);
 
-app.put("/users/:idNumber", updateUserController);
+app.put("/users/:userId", updateUserByIdController);
 
-app.put("/users/reset", resetUsersController);
+app.post("/users/allUsers", addAllUsersController);
+
+app.post("/users/reset", resetUsersController);
 
 app.post("/users/login", loginUsersController);
 
-app.put("/users/:idNumber/password", changeUserPasswordController);
+app.post("/users/:userId/changePassword", changeUserPasswordController);
 
 // -------------------- START SERVER -------------------- //
-
 const startServer = async () => {
-  await connectDB();
+  if (!mongoURI) {
+    console.error("MONGO_URI is not defined!");
+    process.exit(1);
+  }
+  await connectDB(mongoURI);
   app.listen(port, () => {
     console.log(`🚀 Server running at http://localhost:${port}`);
   });

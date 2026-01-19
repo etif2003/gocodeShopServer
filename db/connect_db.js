@@ -1,8 +1,7 @@
 import mongoose from "mongoose";
 
-export const connectDB = async () => {
+export const connectDB = async (mongoURI) => {
   try {
-    const mongoURI = "mongodb://127.0.0.1:27017/gocode-shop";
     await mongoose.connect(mongoURI);
     console.log("✅ MongoDB Connected: gocode-shop");
   } catch (err) {
@@ -10,4 +9,3 @@ export const connectDB = async () => {
     process.exit(1);
   }
 };
-

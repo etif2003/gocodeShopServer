@@ -1,37 +1,42 @@
 import { Product } from "../models/Product.js";
 import fs from "fs";
 
-export const getAllProductsService = () => {
-  return Product.find({});
+export const getAllProductsService = async () => {
+  return await Product.find({});
 };
 
-export const getProductByIdService = (id) => {
-  return Product.findOne({ _id: id });
+export const getProductByIdService = async (id) => {
+  return await Product.findOne({ _id: id });
 };
 
 export const createProductService = (body) => {
   return new Product(body);
 };
 
-export const saveProductService = (newProduct) => {
-  return newProduct.save();
+export const saveProductService = async (newProduct) => {
+  return await newProduct.save();
 };
 
-export const deleteProductByIdService = (id) => {
-  return Product.findByIdAndDelete(id);
+export const deleteProductByIdService = async (id) => {
+  return await Product.findByIdAndDelete(id);
 };
 
-export const updateProductByIdService = (id, updates) => {
-  return Product.findByIdAndUpdate(id, updates, {
+export const updateProductByIdService = async (id, updates) => {
+  return await Product.findByIdAndUpdate(id, updates, {
     new: true,
   });
 };
 
-export const readProductFromFileService = () => {
-  return JSON.parse(fs.readFileSync("./products.json", { encoding: "utf-8" }));
+export const readProductFromFileService = async () => {
+  return await JSON.parse(
+    fs.readFileSync("./products.json", { encoding: "utf-8" })
+  );
 };
 
-export const deleteAllProductsService = () => Product.deleteMany({});
+export const deleteAllProductsService = async () => {
+  return await Product.deleteMany({});
+};
 
-export const insertAllProductsService = (products) =>
-  Product.insertMany(products);
+export const insertAllProductsService = async (products) => {
+  return await Product.insertMany(products);
+};
