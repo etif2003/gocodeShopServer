@@ -1,3 +1,5 @@
+import jwt from "jsonwebtoken";
+
 import {
   changeUserPasswordService,
   deleteAllUsersService,
@@ -150,13 +152,51 @@ export const loginUsersController = async (req, res) => {
       return serverResponse(res, 401, "Invalid credentials");
     }
 
-    return serverResponse(res, 200, { isLogged: isLogged });
+    //JWT
+    const user = { email: email };
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
+    refreshTokens.push(refreshToken);
+    res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    //---
+
+    //return serverResponse(res, 200, { isLogged: isLogged });
   } catch (error) {
     return res
       .status(500)
       .json({ message: "Error login user", error: error.message });
   }
 };
+
+let refreshTokens = [];
+
+export const userTokenController = (req, res) => {
+  const refreshToken = req.body.token;
+  if (refreshToken == null) return res.sendStatus(401);
+  if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    const accessToken = generateAccessToken({ email: user.email });
+    res.status(200).json({ accessToken: accessToken });
+  });
+};
+
+export const logoutUsersController = (req, res) => {
+  try {
+    refreshTokens = refreshTokens.filter(token => token !== req.body.token)
+   
+    return serverResponse(res, 204, "Logged out successfully");
+  } catch (error) {
+    return res
+        .status(500)
+      .json({ message: "Error logging out", error: error.message });
+  }
+};
+
+function generateAccessToken(user) {
+  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
+}
 
 export const changeUserPasswordController = async (req, res) => {
   try {
