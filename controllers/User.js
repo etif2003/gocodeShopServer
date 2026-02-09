@@ -47,7 +47,8 @@ export const getUserByIdController = async (req, res) => {
 
 export const registerUserController = async (req, res) => {
   try {
-    const savedUser = await registerUserService(req.body);
+    const savedUser = await registerUserService({ ...req.body });
+
     return serverResponse(res, 201, savedUser);
   } catch (error) {
     return res
@@ -184,12 +185,12 @@ export const userTokenController = (req, res) => {
 
 export const logoutUsersController = (req, res) => {
   try {
-    refreshTokens = refreshTokens.filter(token => token !== req.body.token)
-   
+    refreshTokens = refreshTokens.filter((token) => token !== req.body.token);
+
     return serverResponse(res, 204, "Logged out successfully");
   } catch (error) {
     return res
-        .status(500)
+      .status(500)
       .json({ message: "Error logging out", error: error.message });
   }
 };

@@ -26,6 +26,7 @@ import {
   userTokenController,
   logoutUsersController
 } from "./controllers/User.js";
+import { authenticateToken } from "./middleware/authenticateToken.js";
 
 const port = process.env.PORT || 4000;
 const mongoURI = process.env.MONGO_URI || "";
@@ -38,55 +39,55 @@ app.use(cors());
 
 // Product:
 
-app.get("/products", getAllProductsController);
+app.get("/api/products", getAllProductsController);
 
-app.get("/products/id/:id", getProductByIdController);
+app.get("/api/products/id/:id", getProductByIdController);
 
-app.post("/products", addProductController);
+app.post("/api/products", addProductController);
 
-app.delete("/products/id/:id", deleteProductController);
+app.delete("/api/products/id/:id", deleteProductController);
 
-app.put("/products/id/:id", updateProductController);
+app.put("/api/products/id/:id", updateProductController);
 
-app.post("/products/reset", resetProductsController);
+app.post("/api/products/reset", resetProductsController);
 
 // User:
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
-  if (token == null) return res.sendStatus(401);
+// function authenticateToken(req, res, next) {
+//   const authHeader = req.headers["authorization"];
+//   const token = authHeader && authHeader.split(" ")[1];
+//   if (token == null) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    console.log(err);
-    if (err) return res.sendStatus(403);
-    req.user = user;
-    next();
-  });
-}
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+//     console.log(err);
+//     if (err) return res.sendStatus(403);
+//     req.user = user;
+//     next();
+//   });
+// }
 
-app.get("/users", authenticateToken, getAllUsersController);
+app.get("/api/users"/*, authenticateToken*/, getAllUsersController);
 
-app.get("/users/user/:userId", getUserByIdController);
+app.get("/api/users/user/:userId", getUserByIdController);
 
-app.post("/users", registerUserController);
+app.post("/api/users", registerUserController);
 
-app.delete("/users/user/:userId", deleteUserByIdController);
+app.delete("/api/users/user/:userId", deleteUserByIdController);
 
-app.delete("/users/allUsers", deleteAllUsersController);
+app.delete("/api/users/allUsers", deleteAllUsersController);
 
-app.put("/users/user/:userId", updateUserByIdController);
+app.put("/api/users/user/:userId", updateUserByIdController);
 
-app.post("/users/allUsers", addAllUsersController);
+app.post("/api/users/allUsers", addAllUsersController);
 
-app.post("/users/reset", resetUsersController);
+app.post("/api/users/reset", resetUsersController);
 
-app.post("/users/login", loginUsersController);
+app.post("/api/users/login", loginUsersController);
 
-app.post("/users/token", userTokenController);
+app.post("/api/users/token", userTokenController);
 
-app.delete("/users/logout", logoutUsersController);
+app.delete("/api/users/logout", logoutUsersController);
 
-app.post("/users/user/:userId/changePassword", changeUserPasswordController);
+app.post("/api/users/user/:userId/changePassword", changeUserPasswordController);
 
 // -------------------- START SERVER -------------------- //
 const startServer = async () => {

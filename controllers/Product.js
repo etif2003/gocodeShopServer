@@ -40,7 +40,7 @@ export const getProductByIdController = async (req, res) => {
 
 export const addProductController = async (req, res) => {
   try {
-    const newProduct = createProductService(req.body);
+    const newProduct =await createProductService(req.body);
     const savedProduct = await saveProductService(newProduct);
     return serverResponse(res, 201, savedProduct);
   } catch (error) {
@@ -102,7 +102,8 @@ export const updateProductController = async (req, res) => {
 
 export const resetProductsController = async (req, res) => {
   try {
-    const products = readProductFromFileService();
+    const products = await readProductFromFileService();
+
     await deleteAllProductsService();
     await insertAllProductsService(products);
     return serverResponse(res, 201, products);
