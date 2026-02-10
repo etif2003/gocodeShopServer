@@ -66,6 +66,8 @@ export const deleteProductController = async (req, res) => {
   }
 };
 
+const ALLOWED_FIELDS = ["title", "price", "description", "category", "image", "rating"];
+
 export const updateProductController = async (req, res) => {
   try {
     const productById = await getProductByIdService(req.params.id);
@@ -76,15 +78,19 @@ export const updateProductController = async (req, res) => {
 
     const updates = { ...req.body };
     const invalidFields = Object.keys(updates).filter(
-      (key) => !(key in productById)
+      (key) =>  !ALLOWED_FIELDS.includes(key)
     );
 
     if (invalidFields.length > 0) {
       return serverResponse(
         res,
         400,
-        `Invalid fields to update: ${invalidFields}`
+        `Invalid fields to update: ${invalidFields.join(", ")}`
       );
+    }
+
+    if ("_id" in updates || "id" in updates) {
+      return serverResponse(res, 400, "Cannot update id");
     }
 
     const productToUpdate = await updateProductByIdService(
