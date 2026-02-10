@@ -24,6 +24,7 @@ export const deleteProductByIdService = async (id) => {
 export const updateProductByIdService = async (id, updates) => {
   return await Product.findByIdAndUpdate(id, updates, {
     new: true,
+    runValidators: true,
   });
 };
 
