@@ -1,6 +1,8 @@
 import { User } from "../models/User.js";
 import bcrypt from "bcryptjs";
 import fs from "fs";
+import jwt from "jsonwebtoken";
+
 
 const hashFunc = (password) => {
   const salt = bcrypt.genSaltSync(10);
@@ -24,7 +26,18 @@ export const registerUserService = async (newUser) => {
   const hashedPassword = hashFunc(newUser.password);
   const userAfterHashing = { ...newUser, password: hashedPassword };
   const user = new User(userAfterHashing);
-  return await user.save();
+  const savedUser= await user.save();
+
+  const token = jwt.sign(
+    { id: savedUser._id, email: savedUser.email },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "1d" },
+  );
+
+  const userObject = user.toObject();
+  delete userObject.password;
+
+  return { user: userObject, token };
 };
 
 // ---------- DELETE ----------
@@ -49,7 +62,7 @@ export const updateUserByIdService = async (id, updates) => {
   const schemaPaths = Object.keys(User.schema.paths);
 
   const invalidFields = Object.keys(updates).filter(
-    (key) => !schemaPaths.includes(key)
+    (key) => !schemaPaths.includes(key),
   );
 
   if (invalidFields.length > 0) {
@@ -70,7 +83,7 @@ export const updateUserByIdService = async (id, updates) => {
 
 export const readUsersFromFileService = async () => {
   const users = JSON.parse(
-    fs.readFileSync("./users.json", { encoding: "utf-8" })
+    fs.readFileSync("./users.json", { encoding: "utf-8" }),
   );
   return users;
 };
@@ -90,13 +103,26 @@ export const loginUserService = async (email, password) => {
   }
 
   const isMatching = bcrypt.compareSync(password, user.password);
-  return isMatching;
+  if (!isMatching) {
+    return null;
+  }
+
+  const token = jwt.sign(
+    { sub: user._id, email: user.email },
+    process.env.ACCESS_TOKEN_SECRET,
+    { expiresIn: "1d" },
+  );
+
+  const userObject = user.toObject();
+  delete userObject.password;
+
+  return { user: userObject, token };
 };
 
 export const changeUserPasswordService = async (
   id,
   oldPassword,
-  newPassword
+  newPassword,
 ) => {
   const user = await User.findOne({ _id: id });
 
@@ -110,12 +136,11 @@ export const changeUserPasswordService = async (
   }
 
   /* check that the new password is standing by the corrected regexes and patterns needed*/
-
   const hashedPassword = hashFunc(newPassword);
 
   return await User.findOneAndUpdate(
     { _id: id },
     { password: hashedPassword },
-    { new: true }
+    { new: true },
   );
 };

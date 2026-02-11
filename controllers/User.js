@@ -47,13 +47,23 @@ export const getUserByIdController = async (req, res) => {
 
 export const registerUserController = async (req, res) => {
   try {
-    const savedUser = await registerUserService({ ...req.body });
+    const result = await registerUserService({ ...req.body });
 
-    return serverResponse(res, 201, savedUser);
+    if (!result) {
+      return res
+        .status(400)
+        .json({ message: "Error creating user", error: error.message });
+    }
+
+    res.status(201).json({
+      message: "User registered successfully",
+      token: result.token,
+      user: result.user,
+    });
   } catch (error) {
     return res
       .status(400)
-      .json({ message: "Error creating user", error: error.message });
+      .json({ message: "Error registering user", error: error.message });
   }
 };
 
@@ -147,22 +157,27 @@ export const loginUsersController = async (req, res) => {
       return serverResponse(res, 400, "Missing email or password");
     }
 
-    const isLogged = await loginUserService(email, password);
+    const result = await loginUserService(email, password);
 
-    if (!isLogged) {
+    if (!result) {
       return serverResponse(res, 401, "Invalid credentials");
     }
 
     //JWT
-    const user = { email: email };
+    // const user = { email: email };
 
-    const accessToken = generateAccessToken(user);
-    const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
-    refreshTokens.push(refreshToken);
-    res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    // const accessToken = generateAccessToken(user);
+    // const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET);
+    // refreshTokens.push(refreshToken);
+    // res.json({ accessToken: accessToken, refreshToken: refreshToken });
     //---
 
-    //return serverResponse(res, 200, { isLogged: isLogged });
+    res.json({
+      message: "Login successful",
+      token: result.token,
+      user: result.user,
+    });
+
   } catch (error) {
     return res
       .status(500)
@@ -170,22 +185,22 @@ export const loginUsersController = async (req, res) => {
   }
 };
 
-let refreshTokens = [];
+// let refreshTokens = [];
 
-export const userTokenController = (req, res) => {
-  const refreshToken = req.body.token;
-  if (refreshToken == null) return res.sendStatus(401);
-  if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    const accessToken = generateAccessToken({ email: user.email });
-    res.status(200).json({ accessToken: accessToken });
-  });
-};
+// export const userTokenController = (req, res) => {
+//   const refreshToken = req.body.token;
+//   if (refreshToken == null) return res.sendStatus(401);
+//   if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
+//   jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+//     if (err) return res.sendStatus(403);
+//     const accessToken = generateAccessToken({ email: user.email });
+//     res.status(200).json({ accessToken: accessToken });
+//   });
+// };
 
 export const logoutUsersController = (req, res) => {
   try {
-    refreshTokens = refreshTokens.filter((token) => token !== req.body.token);
+    // refreshTokens = refreshTokens.filter((token) => token !== req.body.token);
 
     return serverResponse(res, 204, "Logged out successfully");
   } catch (error) {
@@ -195,9 +210,9 @@ export const logoutUsersController = (req, res) => {
   }
 };
 
-function generateAccessToken(user) {
-  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
-}
+// function generateAccessToken(user) {
+//   return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15s" });
+// }
 
 export const changeUserPasswordController = async (req, res) => {
   try {
@@ -211,7 +226,7 @@ export const changeUserPasswordController = async (req, res) => {
     const updatedUser = await changeUserPasswordService(
       userId,
       oldPassword,
-      newPassword
+      newPassword,
     );
 
     if (!updatedUser) {

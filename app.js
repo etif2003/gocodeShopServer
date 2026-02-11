@@ -23,8 +23,7 @@ import {
   registerUserController,
   resetUsersController,
   updateUserByIdController,
-  userTokenController,
-  logoutUsersController
+  logoutUsersController,
 } from "./controllers/User.js";
 import { authenticateToken } from "./middleware/authenticateToken.js";
 
@@ -52,24 +51,10 @@ app.put("/api/products/id/:id", updateProductController);
 app.post("/api/products/reset", resetProductsController);
 
 // User:
-// function authenticateToken(req, res, next) {
-//   const authHeader = req.headers["authorization"];
-//   const token = authHeader && authHeader.split(" ")[1];
-//   if (token == null) return res.sendStatus(401);
 
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-//     console.log(err);
-//     if (err) return res.sendStatus(403);
-//     req.user = user;
-//     next();
-//   });
-// }
-
-app.get("/api/users"/*, authenticateToken*/, getAllUsersController);
+app.get("/api/users", getAllUsersController);
 
 app.get("/api/users/user/:userId", getUserByIdController);
-
-app.post("/api/users", registerUserController);
 
 app.delete("/api/users/user/:userId", deleteUserByIdController);
 
@@ -81,13 +66,19 @@ app.post("/api/users/allUsers", addAllUsersController);
 
 app.post("/api/users/reset", resetUsersController);
 
+app.post("/api/users", registerUserController);
+
 app.post("/api/users/login", loginUsersController);
 
-app.post("/api/users/token", userTokenController);
+// app.post("/api/users/token", userTokenController);
 
 app.delete("/api/users/logout", logoutUsersController);
 
-app.post("/api/users/user/:userId/changePassword", changeUserPasswordController);
+app.post(
+  "/api/users/user/:userId/changePassword",
+  authenticateToken,
+  changeUserPasswordController,
+);
 
 // -------------------- START SERVER -------------------- //
 const startServer = async () => {
