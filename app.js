@@ -1,5 +1,9 @@
 import express from "express";
 import cors from "cors";
+
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
 import { connectDB } from "./db/connect_db.js";
 import "dotenv/config";
 import jwt from "jsonwebtoken";
@@ -27,12 +31,16 @@ import {
 } from "./controllers/User.js";
 import { authenticateToken } from "./middleware/authenticateToken.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const port = process.env.PORT || 4000;
 const mongoURI = process.env.MONGO_URI || "";
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static("client/dist"));
 
 // -------------------- ROUTES -------------------- //
 
@@ -77,6 +85,11 @@ app.post(
   authenticateToken,
   changeUserPasswordController,
 );
+
+app.get(/.*/, (req, res) => {
+  console.log(__dirname);
+  res.sendFile(__dirname + "/client/dist/index.html");
+});
 
 // -------------------- START SERVER -------------------- //
 const startServer = async () => {
