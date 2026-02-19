@@ -70,8 +70,6 @@ app.post("/api/users", registerUserController);
 
 app.post("/api/users/login", loginUsersController);
 
-// app.post("/api/users/token", userTokenController);
-
 app.delete("/api/users/logout", logoutUsersController);
 
 app.post(

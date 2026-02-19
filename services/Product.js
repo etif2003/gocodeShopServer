@@ -30,7 +30,7 @@ export const updateProductByIdService = async (id, updates) => {
 
 export const readProductFromFileService = async () => {
   return await JSON.parse(
-    fs.readFileSync("./products.json", { encoding: "utf-8" })
+    fs.readFileSync("./products.json", { encoding: "utf-8" }),
   );
 };
 
