@@ -6,7 +6,6 @@ import { fileURLToPath } from "url";
 
 import { connectDB } from "./db/connect_db.js";
 import "dotenv/config";
-import jwt from "jsonwebtoken";
 
 import {
   addProductController,
@@ -16,6 +15,7 @@ import {
   resetProductsController,
   updateProductController,
 } from "./controllers/Product.js";
+
 import {
   addAllUsersController,
   changeUserPasswordController,
@@ -29,6 +29,7 @@ import {
   updateUserByIdController,
   logoutUsersController,
 } from "./controllers/User.js";
+
 import { authenticateToken } from "./middleware/authenticateToken.js";
 
 const __filename = fileURLToPath(import.meta.url);

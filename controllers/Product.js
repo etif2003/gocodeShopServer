@@ -40,7 +40,7 @@ export const getProductByIdController = async (req, res) => {
 
 export const addProductController = async (req, res) => {
   try {
-    const newProduct =await createProductService(req.body);
+    const newProduct = await createProductService(req.body);
     const savedProduct = await saveProductService(newProduct);
     return serverResponse(res, 201, savedProduct);
   } catch (error) {
@@ -66,7 +66,14 @@ export const deleteProductController = async (req, res) => {
   }
 };
 
-const ALLOWED_FIELDS = ["title", "price", "description", "category", "image", "rating"];
+const ALLOWED_FIELDS = [
+  "title",
+  "price",
+  "description",
+  "category",
+  "image",
+  "rating",
+];
 
 export const updateProductController = async (req, res) => {
   try {
@@ -78,14 +85,14 @@ export const updateProductController = async (req, res) => {
 
     const updates = { ...req.body };
     const invalidFields = Object.keys(updates).filter(
-      (key) =>  !ALLOWED_FIELDS.includes(key)
+      (key) => !ALLOWED_FIELDS.includes(key),
     );
 
     if (invalidFields.length > 0) {
       return serverResponse(
         res,
         400,
-        `Invalid fields to update: ${invalidFields.join(", ")}`
+        `Invalid fields to update: ${invalidFields.join(", ")}`,
       );
     }
 
@@ -95,7 +102,7 @@ export const updateProductController = async (req, res) => {
 
     const productToUpdate = await updateProductByIdService(
       req.params.id,
-      updates
+      updates,
     );
 
     return serverResponse(res, 200, productToUpdate);
